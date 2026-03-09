@@ -109,29 +109,56 @@ st.markdown("""
 # ---------------------------------------------------------------------------------------
 page = st.sidebar.radio(
     " Navigation",
-    [" Home", "🛰 Mission Predictor", " Mission Control", " About", " Contact"]
+    [" Home", " Mission Predictor", " Mission Control", " About", " Contact"]
 )
 
 # ---------------------------------------------------------------------------------------
 # HOME
 # ---------------------------------------------------------------------------------------
-if page == " Home":
+if page ==  Home":
 
     st.markdown("<div class='main-title'> AI Space Mission System</div>", unsafe_allow_html=True)
+    st.write("### Explore global space missions using AI-powered analytics")
 
-    st.write("### Explore global space missions using AI ")
+    # KPI METRICS
+    total_missions = len(missions_df)
+    total_countries = missions_df["Country"].nunique()
+    avg_budget = missions_df["Budget (in Billion $)"].mean()
+    avg_success = missions_df["Success Probability"].mean()
+
+    c1, c2, c3, c4 = st.columns(4)
+
+    c1.metric(" Missions", total_missions)
+    c2.metric(" Countries", total_countries)
+    c3.metric(" Avg Budget", f"{avg_budget:.2f} B$")
+    c4.metric(" Avg Success", f"{avg_success:.1f}%")
+
+    st.write("")
+
+    st.subheader(" Global Mission Visualization")
 
     st.components.v1.html(
-        """
-        <div style='display:flex;justify-content:center;margin-top:20px;'>
-        <iframe src="https://earth.nullschool.net/#current/wind/surface/level/orthographic=-90.00,0,620"
-        width="900" height="500" style="border:none;border-radius:20px;box-shadow:0 0 30px cyan;"></iframe>
-        </div>
-        """,
-        height=520
+    """
+    <iframe
+    src="https://satellites.pro/3d-earth"
+    width="100%"
+    height="600"
+    style="border:none;border-radius:20px;box-shadow:0 0 30px cyan;">
+    </iframe>
+    """,
+    height=620
     )
 
-    st.markdown("<div class='footer'> Built for Future Space Engineers</div>", unsafe_allow_html=True)
+    st.write("")
+
+    st.subheader(" Latest Missions")
+
+    recent = missions_df.sort_values("Year", ascending=False).head(10)
+
+    st.dataframe(recent, use_container_width=True)
+
+    st.markdown("<div class='footer'>✨ Built by PARIMI GANDHI BALAJI </div>", unsafe_allow_html=True)
+       
 
 # ---------------------------------------------------------------------------------------
 # MISSION CONTROL DASHBOARD
@@ -290,7 +317,7 @@ if page == " Contact":
     st.write("""
 Developer: **Parimi Gandhi Balaji**
 
-Email: **parimibalaji@gmail.com**
+Email: **parimigandhibalaji@gmail.com**
 
 GitHub: https://github.com/ParimiBalaji/space-mission-predictor
 """)
@@ -299,3 +326,4 @@ GitHub: https://github.com/ParimiBalaji/space-mission-predictor
 # FOOTER
 # ---------------------------------------------------------------------------------------
 st.markdown("<br><div class='footer'>✨Built by PARIMI GANDHI BALAJI </div>", unsafe_allow_html=True)
+
