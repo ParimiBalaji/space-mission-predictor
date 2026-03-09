@@ -4,13 +4,13 @@ import numpy as np
 import joblib
 import time
 import random
-
+import plotly.express as px
+import plotly.graph_objects as go
 
 # ---------------------------------------------------------------------------------------
 # PAGE SETTINGS
 # ---------------------------------------------------------------------------------------
-st.set_page_config(page_title="🚀 AI Space Mission", layout="wide", page_icon="🛰")
-
+st.set_page_config(page_title=" AI Space Mission", layout="wide", page_icon="🛰")
 
 # ---------------------------------------------------------------------------------------
 # LOAD MODEL
@@ -22,37 +22,26 @@ def load_artifacts():
         joblib.load("label_encoder.pkl")
     )
 
-
 model, encoder = load_artifacts()
 
+# ---------------------------------------------------------------------------------------
+# LOAD DATASET
+# ---------------------------------------------------------------------------------------
+@st.cache_data
+def load_dataset():
+    df = pd.read_csv("Global_Space_Exploration_Dataset_With_Nulls-checkpoint.csv")
+    return df
+
+missions_df = load_dataset()
 
 # ---------------------------------------------------------------------------------------
 # STATIC MISSION DATA OPTIONS
 # ---------------------------------------------------------------------------------------
-countries = ["USA", "Russia", "India", "China", "Japan", "France", "UK",
-             "Germany", "Israel", "South Korea", "UAE", "Brazil", "Other"]
-
-mission_types = ["Orbiter", "Lander", "Rover", "Flyby", "Test", "Satellite Deployment",
-                 "Space Station Mission", "Crewed Mission", "Deep Space Probe", "Other"]
-
-launch_sites = ["Cape Canaveral (USA)", "Vandenberg (USA)", "Baikonur (Russia)",
-                "Vostochny (Russia)", "Satish Dhawan (India)", "Wenchang (China)",
-                "Jiuquan (China)", "Tanegashima (Japan)", "Guiana Space Centre (EU)",
-                "Mahia Peninsula (New Zealand)", "Other"]
-
-satellite_types = ["Communication", "Navigation", "Military / Surveillance", "Weather",
-                   "Earth Observation", "Deep Space", "Space Telescope",
-                   "CubeSat / NanoSat", "Science Research", "Other"]
-
-technology_used_options = [
-    "Cryogenic Engine", "Solid Rocket Motor", "Liquid Fuel Engine",
-    "Reusable Booster System", "Ion Thruster", "Hybrid Propulsion",
-    "Nuclear Thermal Propulsion", "Solar Sail Technology",
-    "Autonomous Guidance System",
-    "Reusable Spacecraft Technology (Falcon / Starship)",
-    "Other"
-]
-
+countries = missions_df["Country"].dropna().unique().tolist()
+mission_types = missions_df["Mission Type"].dropna().unique().tolist()
+launch_sites = missions_df["Launch Site"].dropna().unique().tolist()
+satellite_types = missions_df["Satellite Type"].dropna().unique().tolist()
+technology_used_options = missions_df["Technology Used"].dropna().unique().tolist()
 
 # ---------------------------------------------------------------------------------------
 # RANDOM MISSION GENERATOR
@@ -71,13 +60,11 @@ def generate_random_values():
         "success_rate": random.randint(0, 100),
     }
 
-
 if "random_data" not in st.session_state:
     st.session_state.random_data = None
 
-
 # ---------------------------------------------------------------------------------------
-# STYLES (PREMIUM UI)
+# STYLES
 # ---------------------------------------------------------------------------------------
 st.markdown("""
 <style>
@@ -94,16 +81,11 @@ st.markdown("""
 .main-title {
     text-align:center;
     font-family:'Orbitron';
-    font-size:55px;
+    font-size:50px;
     font-weight:800;
     background:linear-gradient(90deg,#00ffe6,#00c8ff);
     -webkit-background-clip:text;
     color:transparent;
-    animation:glow 2s infinite alternate;
-}
-@keyframes glow{
-    0%{text-shadow:0 0 10px cyan;}
-    100%{text-shadow:0 0 35px #00ffe6;}
 }
 
 .glass-card {
@@ -112,24 +94,6 @@ st.markdown("""
     border-radius:18px;
     padding:25px;
     border:1px solid rgba(255,255,255,0.15);
-    box-shadow:0 0 20px rgba(0,255,255,0.25);
-}
-
-div.stButton > button {
-    width:100%;
-    font-size:20px;
-    padding:12px;
-    font-weight:700;
-    border-radius:50px;
-    background:linear-gradient(90deg,#007bff,#00ffe1);
-    border:2px solid rgba(255,255,255,0.3);
-    box-shadow:0 0 12px cyan;
-    transition:0.3s;
-}
-
-div.stButton > button:hover {
-    transform:scale(1.06);
-    box-shadow:0 0 25px #00ffe6;
 }
 
 .footer {
@@ -140,21 +104,22 @@ div.stButton > button:hover {
 </style>
 """, unsafe_allow_html=True)
 
-
-
+# ---------------------------------------------------------------------------------------
+# SIDEBAR
+# ---------------------------------------------------------------------------------------
+page = st.sidebar.radio(
+    " Navigation",
+    [" Home", "🛰 Mission Predictor", " Mission Control", " About", " Contact"]
+)
 
 # ---------------------------------------------------------------------------------------
-# SIDEBAR NAVIGATION
+# HOME
 # ---------------------------------------------------------------------------------------
-page = st.sidebar.radio("📂 Navigation", ["🏠 Home", "🛰 Mission Predictor", "📘 About", "📞 Contact"])
+if page == " Home":
 
+    st.markdown("<div class='main-title'> AI Space Mission System</div>", unsafe_allow_html=True)
 
-# ---------------------------------------------------------------------------------------
-# HOME (3D Earth)
-# ---------------------------------------------------------------------------------------
-if page == "🏠 Home":
-    st.markdown("<div class='main-title'>🌍 AI Space Mission System</div>", unsafe_allow_html=True)
-    st.write("### Explore predictions, mission history, and more — using advanced AI 🚀")
+    st.write("### Explore global space missions using AI ")
 
     st.components.v1.html(
         """
@@ -166,131 +131,171 @@ if page == "🏠 Home":
         height=520
     )
 
-    st.markdown("<div class='footer'>🚀 Built for Future Space Engineers</div>", unsafe_allow_html=True)
-
-
+    st.markdown("<div class='footer'> Built for Future Space Engineers</div>", unsafe_allow_html=True)
 
 # ---------------------------------------------------------------------------------------
-# MISSION PREDICTOR PAGE
+# MISSION CONTROL DASHBOARD
+# ---------------------------------------------------------------------------------------
+if page == " Mission Control":
+
+    st.markdown("<div class='main-title'>🛰 Mission Control Dashboard</div>", unsafe_allow_html=True)
+
+    # KPIs
+    total_missions = len(missions_df)
+    avg_budget = missions_df["Budget (in Billion $)"].mean()
+    avg_duration = missions_df["Duration (in Days)"].mean()
+    avg_success = missions_df["Success Probability"].mean()
+
+    col1,col2,col3,col4 = st.columns(4)
+
+    col1.metric(" Total Missions", total_missions)
+    col2.metric(" Avg Budget ($B)", round(avg_budget,2))
+    col3.metric(" Avg Duration", round(avg_duration,1))
+    col4.metric(" Avg Success %", round(avg_success,1))
+
+    st.write("")
+
+    # Budget vs Success
+    fig = px.scatter(
+        missions_df,
+        x="Budget (in Billion $)",
+        y="Success Probability",
+        color="Mission Risk Level",
+        title="Budget vs Success Probability"
+    )
+    st.plotly_chart(fig,use_container_width=True)
+
+    # Missions by country
+    country_counts = missions_df["Country"].value_counts()
+
+    fig2 = px.bar(
+        country_counts,
+        title="Global Missions by Country"
+    )
+    st.plotly_chart(fig2,use_container_width=True)
+
+    # Risk distribution
+    risk_counts = missions_df["Mission Risk Level"].value_counts()
+
+    fig3 = px.pie(
+        names=risk_counts.index,
+        values=risk_counts.values,
+        title="Mission Risk Distribution"
+    )
+    st.plotly_chart(fig3,use_container_width=True)
+
+    # Technology usage
+    tech_counts = missions_df["Technology Used"].value_counts().head(10)
+
+    fig4 = px.bar(
+        tech_counts,
+        title="Top Space Technologies"
+    )
+    st.plotly_chart(fig4,use_container_width=True)
+
+    st.subheader("📡 Recent Missions")
+    st.dataframe(missions_df.head(20),use_container_width=True)
+
+# ---------------------------------------------------------------------------------------
+# MISSION PREDICTOR
 # ---------------------------------------------------------------------------------------
 if page == "🛰 Mission Predictor":
 
-    st.markdown("<div class='main-title'>🚀 Space Mission Success Predictor</div>", unsafe_allow_html=True)
-    st.write("### AI-powered prediction based on global space mission patterns.")
+    st.markdown("<div class='main-title'> Space Mission Success Predictor</div>", unsafe_allow_html=True)
 
-    st.write("")
     if st.button("🎲 Generate Random Mission"):
         st.session_state.random_data = generate_random_values()
 
-    with st.container():
-        st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
+    random_values = st.session_state.random_data
 
-        random_values = st.session_state.random_data
-        col1, col2 = st.columns(2)
+    col1,col2 = st.columns(2)
 
-        with col1:
-            country = st.selectbox("🌍 Country", countries,
-                                   index=countries.index(random_values["country"]) if random_values else 0)
-            mission_type = st.selectbox("🛰 Mission Type", mission_types,
-                                        index=mission_types.index(random_values["mission_type"]) if random_values else 0)
-            risk_level = st.selectbox("⚠ Mission Risk Level", ["Low", "Medium", "High"],
-                                      index=["Low", "Medium", "High"].index(
-                                          random_values["risk_level"]
-                                      ) if random_values else 0)
-            crew_size = st.number_input("👨‍🚀 Crew Size", 0, 10,
-                                        value=random_values["crew_size"] if random_values else 0)
+    with col1:
+        country = st.selectbox("Country",countries)
+        mission_type = st.selectbox("Mission Type",mission_types)
+        risk_level = st.selectbox("Risk Level",["Low","Medium","High"])
+        crew_size = st.number_input("Crew Size",0,10)
 
-        with col2:
-            launch_site = st.selectbox("🚀 Launch Site", launch_sites,
-                                       index=launch_sites.index(random_values["launch_site"]) if random_values else 0)
-            satellite_type = st.selectbox("🛰 Satellite Type", satellite_types,
-                                          index=satellite_types.index(random_values["satellite_type"]) if random_values else 0)
-            technology_used = st.selectbox("🔧 Technology Used", technology_used_options,
-                                           index=technology_used_options.index(
-                                               random_values["technology_used"]
-                                           ) if random_values else 0)
+    with col2:
+        launch_site = st.selectbox("Launch Site",launch_sites)
+        satellite_type = st.selectbox("Satellite Type",satellite_types)
+        technology_used = st.selectbox("Technology Used",technology_used_options)
 
-        duration = st.slider("⏳ Mission Duration (Days)", 1, 1000,
-                             value=random_values["duration"] if random_values else 120)
+    duration = st.slider("Duration (Days)",1,1000)
+    budget = st.slider("Budget (Billion $)",0.1,100.0)
+    success_rate = st.slider("Historical Success Rate (%)",0,100)
 
-        budget = st.slider("💰 Budget (Billion $)", 0.1, 100.0,
-                           value=random_values["budget"] if random_values else 1.5)
+    input_data = pd.DataFrame({
+        "Country":[country],
+        "Mission Type":[mission_type],
+        "Launch Site":[launch_site],
+        "Satellite Type":[satellite_type],
+        "Budget (in Billion $)":[budget],
+        "Success Rate (%)":[success_rate],
+        "Technology Used":[technology_used],
+        "Duration (in Days)":[duration],
+        "Crew Size":[crew_size],
+        "Mission Risk Level":[risk_level]
+    })
 
-        success_rate = st.slider("📊 Historical Success Rate (%)", 0, 100,
-                                 value=random_values["success_rate"] if random_values else 70)
+    for col in input_data.select_dtypes(include="object"):
+        if input_data[col][0] not in encoder.classes_:
+            encoder.classes_ = np.append(encoder.classes_, input_data[col][0])
+        input_data[col] = encoder.transform(input_data[col])
 
-        input_data = pd.DataFrame({
-            "Country": [country], "Mission Type": [mission_type],
-            "Launch Site": [launch_site], "Satellite Type": [satellite_type],
-            "Budget (in Billion $)": [budget], "Success Rate (%)": [success_rate],
-            "Technology Used": [technology_used], "Duration (in Days)": [duration],
-            "Crew Size": [crew_size], "Mission Risk Level": [risk_level]
-        })
+    if st.button(" Run Prediction"):
 
-        for col in input_data.select_dtypes(include='object'):
-            if input_data[col][0] not in encoder.classes_:
-                encoder.classes_ = np.append(encoder.classes_, input_data[col][0])
-            input_data[col] = encoder.transform(input_data[col])
+        prediction = model.predict(input_data)[0]
+        confidence = model.predict_proba(input_data)[0][prediction]*100
 
-        st.write("")
-        if st.button("🔍 Run Prediction"):
-            with st.spinner("🛰 Running mission simulation..."):
-                progress = st.progress(0)
-                for i in range(100):
-                    time.sleep(0.01)
-                    progress.progress(i + 1)
+        fig = go.Figure(go.Indicator(
+            mode="gauge+number",
+            value=confidence,
+            title={'text':"Mission Success Probability"},
+            gauge={'axis':{'range':[0,100]}}
+        ))
 
-            prediction = model.predict(input_data)[0]
-            confidence = model.predict_proba(input_data)[0][prediction] * 100
+        st.plotly_chart(fig,use_container_width=True)
 
-            if prediction == 1:
-                st.balloons()
-                st.success(f"🟢 Mission Likely Successful — Confidence: {confidence:.2f}%")
-            else:
-                st.snow()
-                st.error(f"🔴 Mission Failure Risk — Confidence: {confidence:.2f}%")
-
-            with st.expander("📄 Mission Summary"):
-                st.dataframe(input_data)
-
-        st.markdown("</div>", unsafe_allow_html=True)
-
-
+        if prediction==1:
+            st.success(f"Mission Likely Successful ({confidence:.2f}%)")
+        else:
+            st.error(f"Mission Failure Risk ({confidence:.2f}%)")
 
 # ---------------------------------------------------------------------------------------
-# ABOUT PAGE
+# ABOUT
 # ---------------------------------------------------------------------------------------
-if page == "📘 About":
+if page == " About":
+
     st.markdown("<div class='main-title'>📘 About The Project</div>", unsafe_allow_html=True)
-    st.write("""
-This AI application predicts the success of space missions using real global space mission patterns.
 
-### 🔍 Features:
-- AI-based machine learning predictions  
-- Mission scenario randomizer  
-- Interactive UI with 3D Earth model  
-- Future-ready space analytics  
+    st.write("""
+AI system predicting the success probability of space missions using machine learning.
+
+Features:
+
+• Mission success prediction  
+• Global mission dataset analytics  
+• NASA-style mission control dashboard  
+• Interactive visualization
 """)
 
+# ---------------------------------------------------------------------------------------
+# CONTACT
+# ---------------------------------------------------------------------------------------
+if page == " Contact":
 
-# ---------------------------------------------------------------------------------------
-# CONTACT PAGE
-# ---------------------------------------------------------------------------------------
-if page == "📞 Contact":
     st.markdown("<div class='main-title'>📡 Contact the Developer</div>", unsafe_allow_html=True)
+
     st.write("""
-💡 Developed by: **Parimi Gandhi Balaji**
+Developer: **Parimi Gandhi Balaji**
 
-📧 Email: **parimibalaji@gmail.com**
+Email: **parimibalaji@gmail.com**
 
-🌍 GitHub/Portfolio: *https://github.com/ParimiBalaji/space-mission-predictor*
-
-🚀 Available for freelance & collaboration in  
-AI • Space Technology • Web Engineering • ML Systems
+GitHub: https://github.com/ParimiBalaji/space-mission-predictor
 """)
-
 
 # ---------------------------------------------------------------------------------------
 # FOOTER
 # ---------------------------------------------------------------------------------------
-st.markdown("<br><div class='footer'>✨Built by PARIMI GANDHI BALAJI 🚀</div>", unsafe_allow_html=True)
+st.markdown("<br><div class='footer'>✨Built by PARIMI GANDHI BALAJI </div>", unsafe_allow_html=True)
