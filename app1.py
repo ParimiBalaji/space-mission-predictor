@@ -115,50 +115,76 @@ page = st.sidebar.radio(
 # ---------------------------------------------------------------------------------------
 # HOME
 # ---------------------------------------------------------------------------------------
-if page ==  Home":
+if page == "Home":
 
-    st.markdown("<div class='main-title'> AI Space Mission System</div>", unsafe_allow_html=True)
+    st.markdown("<div class='main-title'>AI Space Mission System</div>", unsafe_allow_html=True)
+
     st.write("### Explore global space missions using AI-powered analytics")
 
-    # KPI METRICS
+    # KPIs
     total_missions = len(missions_df)
     total_countries = missions_df["Country"].nunique()
     avg_budget = missions_df["Budget (in Billion $)"].mean()
     avg_success = missions_df["Success Probability"].mean()
 
-    c1, c2, c3, c4 = st.columns(4)
+    col1, col2, col3, col4 = st.columns(4)
 
-    c1.metric(" Missions", total_missions)
-    c2.metric(" Countries", total_countries)
-    c3.metric(" Avg Budget", f"{avg_budget:.2f} B$")
-    c4.metric(" Avg Success", f"{avg_success:.1f}%")
+    col1.metric("Total Missions", total_missions)
+    col2.metric("Countries", total_countries)
+    col3.metric("Average Budget (Billion $)", round(avg_budget,2))
+    col4.metric("Average Success Probability (%)", round(avg_success,1))
 
     st.write("")
 
-    st.subheader(" Global Mission Visualization")
+    # Missions by Country
+    st.subheader("Missions by Country")
 
-    st.components.v1.html(
-    """
-    <iframe
-    src="https://satellites.pro/3d-earth"
-    width="100%"
-    height="600"
-    style="border:none;border-radius:20px;box-shadow:0 0 30px cyan;">
-    </iframe>
-    """,
-    height=620
+    country_counts = missions_df["Country"].value_counts().head(10)
+
+    fig1 = px.bar(
+        x=country_counts.index,
+        y=country_counts.values,
+        labels={"x":"Country","y":"Number of Missions"},
+        title="Top Countries in Space Missions"
     )
 
-    st.write("")
+    st.plotly_chart(fig1, use_container_width=True)
 
-    st.subheader(" Latest Missions")
+    # Missions Over Time
+    st.subheader("Space Missions Over Time")
+
+    year_counts = missions_df["Year"].value_counts().sort_index()
+
+    fig2 = px.line(
+        x=year_counts.index,
+        y=year_counts.values,
+        labels={"x":"Year","y":"Number of Missions"},
+        title="Mission Trend by Year"
+    )
+
+    st.plotly_chart(fig2, use_container_width=True)
+
+    # Budget vs Success
+    st.subheader("Budget vs Mission Success")
+
+    fig3 = px.scatter(
+        missions_df,
+        x="Budget (in Billion $)",
+        y="Success Probability",
+        color="Mission Risk Level",
+        title="Budget vs Success Probability"
+    )
+
+    st.plotly_chart(fig3, use_container_width=True)
+
+    # Recent Missions
+    st.subheader("Recent Missions")
 
     recent = missions_df.sort_values("Year", ascending=False).head(10)
 
     st.dataframe(recent, use_container_width=True)
 
-    st.markdown("<div class='footer'>✨ Built by PARIMI GANDHI BALAJI </div>", unsafe_allow_html=True)
-       
+    st.markdown("<div class='footer'>Built by Parimi Gandhi Balaji</div>", unsafe_allow_html=True)
 
 # ---------------------------------------------------------------------------------------
 # MISSION CONTROL DASHBOARD
@@ -326,4 +352,5 @@ GitHub: https://github.com/ParimiBalaji/space-mission-predictor
 # FOOTER
 # ---------------------------------------------------------------------------------------
 st.markdown("<br><div class='footer'>✨Built by PARIMI GANDHI BALAJI </div>", unsafe_allow_html=True)
+
 
